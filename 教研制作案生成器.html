@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>教研制作需求生成器</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #667085;
+      --line: #d8dee6;
+      --primary: #176b87;
+      --primary-dark: #11566d;
+      --accent: #c85c3e;
+      --soft: #edf6f8;
+      --subtle: #fafbfc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.62;
+    }
+
+    header {
+      padding: 24px clamp(16px, 4vw, 40px);
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 880px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 470px) minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px clamp(16px, 4vw, 40px) 40px;
+    }
+
+    section {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .form-panel {
+      padding: 18px;
+      align-self: start;
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+    }
+
+    .output-panel {
+      overflow: hidden;
+    }
+
+    fieldset {
+      margin: 0 0 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--subtle);
+    }
+
+    legend {
+      padding: 0 8px;
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: var(--primary);
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    button.secondary {
+      color: var(--primary);
+      background: #fff;
+      border: 1px solid var(--primary);
+    }
+
+    button.secondary:hover {
+      background: #f3fbfd;
+    }
+
+    .hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    #output {
+      min-height: 74vh;
+      padding: 22px clamp(16px, 3vw, 34px);
+      background: #fff;
+    }
+
+    #output h2 {
+      margin: 24px 0 8px;
+      padding-bottom: 4px;
+      font-size: 22px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    #output h3 {
+      margin: 20px 0 6px;
+      font-size: 18px;
+      color: var(--primary-dark);
+    }
+
+    #output p,
+    #output li {
+      margin: 6px 0;
+    }
+
+    #output table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px;
+    }
+
+    #output th,
+    #output td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    #output th {
+      background: var(--soft);
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-left: 8px;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 980px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .form-panel {
+        position: static;
+        max-height: none;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      header,
+      .form-panel,
+      .toolbar {
+        display: none;
+      }
+
+      main {
+        display: block;
+        padding: 0;
+      }
+
+      section {
+        border: 0;
+      }
+
+      #output {
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>教研制作需求生成器</h1>
+    <p>面向教研、配音、动画、交互开发团队流转使用。填写一次信息，生成课程设计、分镜脚本、配音提示、交互说明和制作备注。</p>
+  </header>
+
+  <main>
+    <section class="form-panel" aria-label="制作需求表单">
+      <fieldset>
+        <legend>课程基础信息</legend>
+        <label for="projectName">项目名称</label>
+        <input id="projectName" value="香港小学三年级数学微课">
+
+        <div class="row">
+          <div>
+            <label for="region">适用地区</label>
+            <input id="region" value="香港地区">
+          </div>
+          <div>
+            <label for="grade">年级</label>
+            <input id="grade" value="小学三年级">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="subject">学科</label>
+            <input id="subject" value="数学">
+          </div>
+          <div>
+            <label for="duration">成片时长</label>
+            <input id="duration" value="40分钟">
+          </div>
+        </div>
+
+        <label for="topic">课题</label>
+        <input id="topic" value="大数的认识、读写和比较">
+
+        <label for="positioning">课程定位</label>
+        <textarea id="positioning">立足校内学习，巩固基础知识，并通过香港生活情境和推理表达作适度提升。</textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>教学设计信息</legend>
+        <label for="learningGoal">学习目标</label>
+        <textarea id="learningGoal">认识万位以内及五位数的数位意义；能正确读写大数；能比较大数大小；能说出比较方法。</textarea>
+
+        <label for="keyPoint">教学重点</label>
+        <textarea id="keyPoint">数位意义、大数读写、位数相同和不同情况下的大数比较。</textarea>
+
+        <label for="hardPoint">教学难点</label>
+        <textarea id="hardPoint">含0的大数读写，以及从最高位开始逐位比较的表达。</textarea>
+
+        <label for="context">生活情境</label>
+        <textarea id="context">香港小学校图书馆藏书、港铁站人流、社区活动参与人数</textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>动画与配音风格</legend>
+        <label for="voiceStyle">配音风格</label>
+        <textarea id="voiceStyle">亲切、清晰、节奏适中，适合小学三年级学生；关键数学词语放慢并加重语气。</textarea>
+
+        <label for="animationStyle">动画风格</label>
+        <textarea id="animationStyle">明亮、简洁、校园生活感；角色表情清楚，画面避免过度复杂。</textarea>
+
+        <label for="characters">主要角色</label>
+        <textarea id="characters">老师、两名学生、图书管理员、港铁站工作人员、社区活动志愿者。</textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>结构与交互</legend>
+        <div class="row">
+          <div>
+            <label for="exampleCount">例题数量</label>
+            <select id="exampleCount">
+              <option value="3" selected>3道</option>
+              <option value="2">2道</option>
+              <option value="4">4道</option>
+            </select>
+          </div>
+          <div>
+            <label for="practiceCount">每题练习</label>
+            <select id="practiceCount">
+              <option value="3" selected>3道</option>
+              <option value="2">2道</option>
+              <option value="4">4道</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="introIdea">片头动画设定</label>
+        <textarea id="introIdea">学生在校园公告板看到许多大数字，产生“这些大数怎样读、怎样写、怎样比较”的问题。</textarea>
+
+        <label for="storyRule">每个例题前剧情动画规则</label>
+        <textarea id="storyRule">每个例题前先用一个香港生活场景引出问题，再进入老师讲解和学生互动。</textarea>
+
+        <label for="interactionRule">例题交互方式</label>
+        <textarea id="interactionRule">以点击选择、拖拽数字到数位表、排序卡片、填空输入为主；每个交互提供即时反馈和一次纠错提示。</textarea>
+
+        <label for="outroIdea">结束动画设定</label>
+        <textarea id="outroIdea">学生用今天学到的方法读出生活中的大数，并总结“先看数位，再按规则读写和比较”。</textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>制作备注</legend>
+        <label for="assetNotes">素材需求</label>
+        <textarea id="assetNotes">数位表、数字卡片、香港校园、图书馆、港铁站、社区活动场景；需要突出数字和比较符号。</textarea>
+
+        <label for="devNotes">开发注意事项</label>
+        <textarea id="devNotes">所有题目数字应可配置；正确答案和反馈文案分离；交互结果需记录正确、错误、重试状态。</textarea>
+
+        <label for="reviewNotes">审核关注点</label>
+        <textarea id="reviewNotes">数学表述准确；含0读法一致；场景适合香港小学生；配音与字幕一致。</textarea>
+      </fieldset>
+
+      <p class="hint">建议教研填写左侧字段后，将右侧输出复制给动画、配音和开发团队作为制作需求初稿。</p>
+    </section>
+
+    <section class="output-panel" aria-label="生成结果">
+      <div class="toolbar">
+        <button id="generateBtn" type="button">生成制作需求</button>
+        <button id="copyBtn" type="button" class="secondary">复制内容</button>
+        <button id="printBtn" type="button" class="secondary">打印/另存PDF</button>
+      </div>
+      <article id="output"></article>
+    </section>
+  </main>
+
+  <script>
+    const exampleBank = [
+      {
+        title: "认识数位",
+        story: "图书管理员告诉学生，图书馆一共有36,482本书。学生需要看懂这个数中每个数字的位置和意义。",
+        example: "观察36,482，说出每个数字所在的数位和表示的意义。",
+        interaction: "拖拽数字3、6、4、8、2到万位、千位、百位、十位、个位的数位表中。",
+        answer: "3在万位，6在千位，4在百位，8在十位，2在个位。",
+        practices: [
+          "说出24,315中各数字所在的数位。",
+          "57,609中，7表示什么？0在哪个数位？",
+          "写出由4个万、2个千、8个百、0个十、6个一组成的数。",
+          "68,204中，6和2分别表示什么？"
+        ]
+      },
+      {
+        title: "大数的读写",
+        story: "学生在港铁站看到当天进出站人数40,705，想把这个数准确读出来。",
+        example: "读出40,705，并写出“三万二千零六十”。",
+        interaction: "点击选择正确读法，并在填空框中输入“三万二千零六十”对应的数字。",
+        answer: "40,705读作四万零七百零五；三万二千零六十写作32,060。",
+        practices: [
+          "读出28,430。",
+          "读出50,208。",
+          "写出：六万零三百二十。",
+          "写出：八万零九十。"
+        ]
+      },
+      {
+        title: "比较大数",
+        story: "社区活动公布了三组数据，学生要判断哪个数量最多，并说明比较方法。",
+        example: "比较46,820、48,260、9,975的大小。",
+        interaction: "拖拽三个数字卡片，从大到小排列；提交后显示逐位比较过程。",
+        answer: "48,260 > 46,820 > 9,975。",
+        practices: [
+          "比较大小：35,604 ○ 35,460。",
+          "把12,809、9,998、21,080从小到大排列。",
+          "找出最大数：60,050、59,999、60,005。",
+          "把43,208、43,280、42,999从大到小排列。"
+        ]
+      },
+      {
+        title: "综合应用",
+        story: "学生整理一次校园环保活动数据，完成读数、排序和表达任务。",
+        example: "读出18,560、25,080、20,805，并按从大到小排列。",
+        interaction: "先选择每个数的正确读法，再拖拽排序，最后选择比较理由。",
+        answer: "25,080 > 20,805 > 18,560。",
+        practices: [
+          "读出18,560、25,080、20,805。",
+          "说出三个数中最大和最小的数。",
+          "把三个数由小到大排列。",
+          "用一句完整的话说明比较方法。"
+        ]
+      }
+    ];
+
+    function value(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function list(items) {
+      return `<ol>${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ol>`;
+    }
+
+    function paragraphList(text) {
+      const items = text.split(/[\n；;]/).map(item => item.trim()).filter(Boolean);
+      return items.length ? list(items) : "<p>待补充。</p>";
+    }
+
+    function buildExamples(exampleCount, practiceCount) {
+      return exampleBank.slice(0, exampleCount).map((item, index) => {
+        return `
+          <h3>剧情动画${index + 1} + 例题${index + 1}：${escapeHtml(item.title)}</h3>
+          <table>
+            <tr><th>剧情动画</th><td>${escapeHtml(item.story)}</td></tr>
+            <tr><th>例题内容</th><td>${escapeHtml(item.example)}</td></tr>
+            <tr><th>讲解重点</th><td>${escapeHtml(item.answer)}</td></tr>
+            <tr><th>交互设计</th><td>${escapeHtml(item.interaction)}</td></tr>
+            <tr><th>练习配置</th><td>${list(item.practices.slice(0, practiceCount))}</td></tr>
+          </table>
+        `;
+      }).join("");
+    }
+
+    function generate() {
+      const projectName = value("projectName");
+      const region = value("region");
+      const grade = value("grade");
+      const subject = value("subject");
+      const duration = value("duration");
+      const topic = value("topic");
+      const positioning = value("positioning");
+      const learningGoal = value("learningGoal");
+      const keyPoint = value("keyPoint");
+      const hardPoint = value("hardPoint");
+      const context = value("context");
+      const voiceStyle = value("voiceStyle");
+      const animationStyle = value("animationStyle");
+      const characters = value("characters");
+      const introIdea = value("introIdea");
+      const storyRule = value("storyRule");
+      const interactionRule = value("interactionRule");
+      const outroIdea = value("outroIdea");
+      const assetNotes = value("assetNotes");
+      const devNotes = value("devNotes");
+      const reviewNotes = value("reviewNotes");
+      const exampleCount = Number(value("exampleCount"));
+      const practiceCount = Number(value("practiceCount"));
+
+      document.getElementById("output").innerHTML = `
+        <h2>${escapeHtml(topic)} <span class="badge">制作需求初稿</span></h2>
+        <table>
+          <tr><th>项目名称</th><td>${escapeHtml(projectName)}</td><th>适用地区</th><td>${escapeHtml(region)}</td></tr>
+          <tr><th>学科</th><td>${escapeHtml(subject)}</td><th>年级</th><td>${escapeHtml(grade)}</td></tr>
+          <tr><th>成片时长</th><td>${escapeHtml(duration)}</td><th>结构</th><td>片头动画 + ${exampleCount}个剧情动画 + ${exampleCount}道例题交互 + 结束动画</td></tr>
+          <tr><th>课程定位</th><td colspan="3">${escapeHtml(positioning)}</td></tr>
+        </table>
+
+        <h2>一、教学设计</h2>
+        <h3>学习目标</h3>
+        ${paragraphList(learningGoal)}
+        <p><strong>教学重点：</strong>${escapeHtml(keyPoint)}</p>
+        <p><strong>教学难点：</strong>${escapeHtml(hardPoint)}</p>
+        <p><strong>生活情境：</strong>${escapeHtml(context)}</p>
+
+        <h2>二、整体制作风格</h2>
+        <p><strong>配音风格：</strong>${escapeHtml(voiceStyle)}</p>
+        <p><strong>动画风格：</strong>${escapeHtml(animationStyle)}</p>
+        <p><strong>主要角色：</strong>${escapeHtml(characters)}</p>
+
+        <h2>三、视频结构与脚本说明</h2>
+        <h3>片头动画</h3>
+        <p>${escapeHtml(introIdea)}</p>
+        <p><strong>配音提示：</strong>用问题引入课题，语气轻快，最后明确本节课要学习大数的认识、读写和比较。</p>
+
+        <h3>剧情动画通用规则</h3>
+        <p>${escapeHtml(storyRule)}</p>
+
+        ${buildExamples(exampleCount, practiceCount)}
+
+        <h3>结束动画</h3>
+        <p>${escapeHtml(outroIdea)}</p>
+        <p><strong>配音提示：</strong>回顾三个核心方法：认识数位、正确读写、按位比较；鼓励学生在生活中继续观察大数。</p>
+
+        <h2>四、交互开发说明</h2>
+        <p>${escapeHtml(interactionRule)}</p>
+        <table>
+          <tr><th>交互目标</th><td>让学生在操作中完成数位识别、读写判断、大小比较和排序。</td></tr>
+          <tr><th>反馈规则</th><td>答对显示鼓励反馈；答错提示关键方法；第二次错误后显示讲解步骤。</td></tr>
+          <tr><th>数据配置</th><td>题干、选项、正确答案、反馈文案、数字卡片均建议配置化，方便后续换题。</td></tr>
+        </table>
+
+        <h2>五、下游制作备注</h2>
+        <p><strong>素材需求：</strong>${escapeHtml(assetNotes)}</p>
+        <p><strong>开发注意事项：</strong>${escapeHtml(devNotes)}</p>
+        <p><strong>审核关注点：</strong>${escapeHtml(reviewNotes)}</p>
+
+        <h2>六、交付检查清单</h2>
+        <ol>
+          <li>教研确认知识点、例题、练习和答案准确。</li>
+          <li>编导确认片头、剧情动画、例题讲解和结束动画衔接自然。</li>
+          <li>配音确认术语读法、语速、重音和字幕一致。</li>
+          <li>动画确认角色、场景、数字信息和画面焦点清晰。</li>
+          <li>开发确认每道例题的交互方式、答案规则和反馈状态可实现。</li>
+        </ol>
+      `;
+    }
+
+    async function copyOutput() {
+      const text = document.getElementById("output").innerText;
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById("copyBtn");
+      const oldText = btn.textContent;
+      btn.textContent = "已复制";
+      setTimeout(() => {
+        btn.textContent = oldText;
+      }, 1200);
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", generate);
+    document.getElementById("copyBtn").addEventListener("click", copyOutput);
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+    generate();
+  </script>
+</body>
+</html>
