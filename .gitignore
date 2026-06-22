@@ -1,0 +1,6 @@
+models/
+vosk-model-small-cn-0.22/
+*.zip
+*.wav
+*_transcript.txt
+*_transcript_recheck.txt
