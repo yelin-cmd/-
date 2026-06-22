@@ -1,0 +1,8 @@
+vosk-model-small-cn-0.22/
+*.zip
+sample-audio/
+sample-output/
+*.wav
+*_transcript.txt
+*_transcript_recheck.txt
+*_transcript_verify.txt

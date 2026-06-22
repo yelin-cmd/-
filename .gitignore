@@ -1,9 +1,0 @@
-models/
-audio-transcription/vosk-model-small-cn-0.22/
-audio-transcription/*.zip
-audio-transcription/sample-audio/
-audio-transcription/sample-output/
-*.wav
-*_transcript.txt
-*_transcript_recheck.txt
-*_transcript_verify.txt
