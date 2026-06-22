@@ -8,13 +8,19 @@
 
 `C:\Users\yelin01\Documents\Codex\2026-06-15\new-chat-4\transcribe_audio.py`
 
+双击入口：
+
+`C:\Users\yelin01\Documents\Codex\2026-06-15\new-chat-4\transcribe_audio.bat`
+
 ## 用法
 
-在这个目录里运行：
+命令行运行：
 
 ```powershell
 & 'C:\Users\yelin01\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' .\transcribe_audio.py "C:\路径\你的录音.m4a"
 ```
+
+也可以把录音文件直接拖到 `transcribe_audio.bat` 上运行。
 
 运行后会在录音同目录下生成：
 
@@ -38,4 +44,4 @@
 
 ## 说明
 
-这套能力适合先快速出一版逐段文字稿。口语、专有名词、人名较多时，识别结果可能需要再顺一遍。
+这套能力适合先快速出一版逐段文字稿。口语、专有名词、人名较多时，识别结果通常还需要再顺一遍。
